@@ -1,0 +1,21 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Atmel Studio Solution File, Format Version 11.00
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{82D3B6EB-B038-4453-BA8D-55DD043866CB}") = "RifleMain", "RifleMain.cproj", "{E46BECA5-B3B6-4B6B-8CDD-F34750968117}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E46BECA5-B3B6-4B6B-8CDD-F34750968117}.Debug|AVR.ActiveCfg = Debug|AVR
+		{E46BECA5-B3B6-4B6B-8CDD-F34750968117}.Debug|AVR.Build.0 = Debug|AVR
+		{E46BECA5-B3B6-4B6B-8CDD-F34750968117}.Release|AVR.ActiveCfg = Release|AVR
+		{E46BECA5-B3B6-4B6B-8CDD-F34750968117}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>스마트 소총 보관함 OMS</title>
+  <link rel="icon" href="/assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="/assets/app-icon.png" sizes="256x256" />
+  <link rel="stylesheet" href="/app.css?v=34" />
+</head>
+<body>
+  <div class="oms">
+    <header class="menu-bar">
+      <nav id="toolbar" aria-label="메뉴"></nav>
+      <div id="who" class="who-label">주식회사 젤루텍</div>
+    </header>
+    <div class="oms-main">
+      <aside class="left-col">
+        <div id="netList" class="net-list"></div>
+        <div id="statBox"></div>
+      </aside>
+      <section id="grid" class="grid-panel"></section>
+      <aside class="memo-col">
+        <div class="memo-title">MEMO</div>
+        <textarea id="memoText"></textarea>
+        <div class="memo-actions">
+          <button type="button" class="mini" id="memoMenu">Memo</button>
+          <button type="button" class="mini" id="memoSave">저장</button>
+          <button type="button" class="mini" id="memoLoad">불러오기</button>
+        </div>
+      </aside>
+    </div>
+    <footer class="oms-foot">젤루텍</footer>
+  </div>
+  <div id="fullScreen" class="full-screen" hidden></div>
+  <div id="modal" class="modal" hidden></div>
+  <div id="alert" class="modal" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+  <script src="/app.js?v=34"></script>
+</body>
+</html>
