@@ -1,0 +1,2 @@
+﻿# Large OMS binaries (GitHub 100MB soft/hard limits)
+armory/oms/스마트[[:space:]]무기고[[:space:]]시스템.exe filter=lfs diff=lfs merge=lfs -text

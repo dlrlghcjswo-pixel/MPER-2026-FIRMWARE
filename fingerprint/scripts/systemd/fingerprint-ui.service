@@ -1,0 +1,17 @@
+[Unit]
+Description=Fingerprint locker UI (user)
+After=fingerprint-daemon.service
+Wants=fingerprint-daemon.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/fingerprint/ui
+Environment=SFM_EXTERNAL_DAEMON=1
+ExecStart=/home/pi/fingerprint/scripts/run_ui_server.sh
+Restart=always
+RestartSec=2
+StandardOutput=append:/home/pi/fingerprint/logs/ui.log
+StandardError=append:/home/pi/fingerprint/logs/ui.log
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Fingerprint Locker Kiosk
+Comment=Disabled — launched from ~/.config/labwc/autostart (avoids double start)
+Exec=/bin/bash /home/pi/fingerprint/scripts/run_kiosk.sh
+Terminal=false
+Hidden=true
+X-GNOME-Autostart-enabled=false
+StartupNotify=false

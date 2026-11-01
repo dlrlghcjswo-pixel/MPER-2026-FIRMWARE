@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 import sys
-import tempfile
+import threading
 import time
 import traceback
 import webbrowser
@@ -53,7 +52,7 @@ def show_splash() -> None:
     label = tk.Label(root, image=image, bg="white", borderwidth=0)
     label.image = image
     label.pack(expand=True)
-    root.after(1700, root.destroy)
+    root.after(600, root.destroy)
     root.mainloop()
 
 
@@ -76,20 +75,28 @@ def edge_count(marker: str) -> int:
         return 0
 
 
+def edge_profile() -> Path:
+    root = Path(os.environ.get("APPDATA", str(Path.home()))) / "Zellootec" / "RifleOMS" / "edge-profile"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
 def open_window(port: int) -> Path | None:
     edge = edge_path()
     url = f"http://127.0.0.1:{port}/"
     if edge is None:
         webbrowser.open(url)
         return None
-    profile = Path(tempfile.mkdtemp(prefix="zellootec-oms-"))
+    profile = edge_profile()
     cmd = [
         str(edge),
         f"--app={url}",
         f"--user-data-dir={profile}",
         "--window-size=1480,940",
         "--no-first-run",
-        "--disable-features=Translate",
+        "--disable-features=Translate,msEdgeFirstRun",
+        "--disable-sync",
+        "--no-default-browser-check",
     ]
     subprocess.Popen(cmd)
     return profile
@@ -109,23 +116,29 @@ def wait_for_window(profile: Path) -> bool:
 def main() -> None:
     server, port = serve()
     profile: Path | None = None
+    launched: dict[str, Path | None] = {}
+
+    def launch() -> None:
+        launched["profile"] = open_window(port)
+
+    starter = threading.Thread(target=launch, daemon=True)
+    starter.start()
     try:
         show_splash()
-        profile = open_window(port)
+        starter.join()
+        profile = launched.get("profile")
         if profile is None or not wait_for_window(profile):
             webbrowser.open(f"http://127.0.0.1:{port}/")
             show_fallback()
     finally:
         server.shutdown()
-        if profile is not None:
-            shutil.rmtree(profile, ignore_errors=True)
 
 
 def show_fallback() -> None:
     import tkinter as tk
 
     root = tk.Tk()
-    root.title("스마트 소총 보관함 OMS")
+    root.title("스마트 총기 보관함 OMS")
     icon = ROOT / "assets" / "favicon.ico"
     if icon.is_file():
         root.iconbitmap(str(icon))

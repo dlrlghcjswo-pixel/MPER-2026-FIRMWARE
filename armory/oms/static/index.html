@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>스마트 무기고 시스템</title>
+  <meta name="application-name" content="스마트 무기고 시스템" />
+  <meta name="apple-mobile-web-app-title" content="스마트 무기고 시스템" />
+  <link rel="icon" href="/assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="/assets/app-icon.png" sizes="256x256" />
+  <link rel="stylesheet" href="/app.css?v=145" />
+</head>
+<body>
+  <div class="oms">
+    <header class="menu-bar">
+      <nav id="toolbar" aria-label="메뉴"></nav>
+      <div id="who" class="who-label">주식회사 젤루텍</div>
+    </header>
+    <div class="oms-main">
+      <aside class="left-col">
+        <div id="netList" class="net-list"></div>
+        <div id="statBox"></div>
+      </aside>
+      <section class="center-col">
+        <div id="grid" class="grid-panel"></div>
+        <footer class="oms-log" id="logPanel" aria-label="실시간 현황">
+          <div class="oms-log__label"><span>실시간</span><span>현황</span></div>
+          <div class="oms-log__lines" id="logLines"></div>
+        </footer>
+      </section>
+      <aside class="memo-col">
+        <div class="memo-title">MEMO</div>
+        <textarea id="memoText"></textarea>
+        <div class="memo-actions">
+          <button type="button" class="mini" id="memoMenu">Memo</button>
+          <button type="button" class="mini" id="memoSave">저장</button>
+          <button type="button" class="mini" id="memoLoad">불러오기</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <div id="fullScreen" class="full-screen" hidden></div>
+  <div id="modal" class="modal" hidden></div>
+  <div id="alert" class="modal" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+  <script src="/app.js?v=145"></script>
+</body>
+</html>

@@ -74,7 +74,6 @@ function paintChrome() {
     btn.className = "mb" + (allowed(item) ? "" : " locked");
     btn.dataset.nav = item.id;
     btn.textContent = item.id === "login" ? ((data && data.who) ? "로그아웃" : "로그인") : item.label;
-    btn.onclick = () => openMenu(item);
     nav.appendChild(btn);
   });
   alignLeftColumn();
@@ -96,16 +95,16 @@ function paintNet() {
     box.innerHTML = "";
     return;
   }
-  const rows = (data.boards || []).map((board) => `
-    <button type="button" class="net-item ${board.online ? "online" : "offline"} ${board.selected ? "picked" : ""}" data-locker="${escapeAttr(board.id)}" title="${escapeAttr(board.host)}:${board.port}"><img src="/assets/locker.png" alt="" /><span>${escapeAttr(board.name)}</span></button>`).join("");
-  box.innerHTML = `<div class="net-tree"><button type="button" class="net-head" id="netAdd"><img src="/assets/zellootec.png" alt="" /><span>지문인식</span></button><div class="net-children">${rows}</div></div>`;
-  $("netAdd").onclick = () => {
-    if (!state.data || !state.data.can || !state.data.can.manage) {
-      toast(state.data && state.data.who ? "이 계정으로는 이 화면을 열 수 없습니다." : "로그인한 뒤에 사용할 수 있습니다.");
-      return;
-    }
-    openLockerDialog(null);
-  };
+  const rows = (data.boards || []).map((board) => {
+    const pistol = board.kind === "pistol";
+    const gun = pistol ? "/assets/pistol-clear.png?v=59" : "/assets/rifle-side.png?v=59";
+    const gunAlt = pistol ? "권총보관함" : "소총보관함";
+    return `
+    <button type="button" class="net-item ${board.online ? "online" : "linking"} ${board.selected ? "picked" : ""}" data-locker="${escapeAttr(board.id)}" title="${escapeAttr(board.host)}:${board.port}"><img class="net-gun${pistol ? " is-pistol" : ""}" src="${gun}" alt="${gunAlt}" /><span>${escapeAttr(board.name)}</span></button>`;
+  }).join("");
+  const unitName = (data.unit_name || "지문인식").trim() || "지문인식";
+  box.innerHTML = `<div class="net-tree"><button type="button" class="net-head" id="netUnit" title="부대이름"><img src="/assets/zellootec.png" alt="" /><span>${escapeAttr(unitName)}</span></button><div class="net-children">${rows}</div></div>`;
+  $("netUnit").onclick = () => openUnitDialog();
   box.querySelectorAll("[data-locker]").forEach((btn) => {
     btn.onclick = () => selectLocker(btn.dataset.locker);
     btn.ondblclick = () => {
@@ -118,11 +117,31 @@ function scannerIcon() {
   return `<span class="scanner-icon"></span>`;
 }
 
+function emptyFleetBucket() {
+  return { lockers: 0, registered: 0, issued: 0, stored: 0, empty: 0, unpaid: 0, bays: 0 };
+}
+
 function fleetOf(data) {
   const names = ["사격", "훈련", "정비", "근무", "기타", "젤루텍"];
-  const purposes = Object.fromEntries(names.map((name) => [name, 0]));
-  const total = { registered: 0, issued: 0, stored: 0, empty: 0, unpaid: 0, bays: 0 };
+  const emptyPurposes = () => Object.fromEntries(names.map((name) => [name, 0]));
+  const purposes = emptyPurposes();
+  const riflePurposes = emptyPurposes();
+  const pistolPurposes = emptyPurposes();
+  const rifle = emptyFleetBucket();
+  const pistol = emptyFleetBucket();
+  const total = emptyFleetBucket();
   (data.boards || []).filter((item) => item.online).forEach((board) => {
+    const kind = board.kind === "pistol" ? "pistol" : "rifle";
+    const bucket = kind === "pistol" ? pistol : rifle;
+    const kindPurposes = kind === "pistol" ? pistolPurposes : riflePurposes;
+    bucket.lockers += 1;
+    bucket.bays += 10;
+    bucket.registered += Number(board.registered) || 0;
+    bucket.issued += Number(board.issued) || 0;
+    bucket.stored += Number(board.stored) || 0;
+    bucket.empty += Number(board.empty) || 0;
+    bucket.unpaid += Number(board.unpaid) || 0;
+    total.lockers += 1;
     total.bays += 10;
     total.registered += Number(board.registered) || 0;
     total.issued += Number(board.issued) || 0;
@@ -130,10 +149,13 @@ function fleetOf(data) {
     total.empty += Number(board.empty) || 0;
     total.unpaid += Number(board.unpaid) || 0;
     (board.purposes || []).forEach((item) => {
-      if (Object.prototype.hasOwnProperty.call(purposes, item.name)) purposes[item.name] += Number(item.count) || 0;
+      if (!Object.prototype.hasOwnProperty.call(purposes, item.name)) return;
+      const count = Number(item.count) || 0;
+      purposes[item.name] += count;
+      kindPurposes[item.name] += count;
     });
   });
-  return { total, purposes, names };
+  return { total, rifle, pistol, purposes, riflePurposes, pistolPurposes, names };
 }
 
 function purposeTitle(data, name) {
@@ -148,29 +170,33 @@ function paintStats() {
     box.innerHTML = "";
     return;
   }
-  const fleet = fleetOf(data);
-  const countOf = (name) => fleet.purposes[name] || 0;
-  const names = fleet.names;
+  const locker = data.locker || {};
+  const kind = locker.kind === "pistol" ? "pistol" : "rifle";
+  const title = kind === "pistol" ? "권총보관함 현황" : "소총 보관함 현황";
+  const summary = data.summary || {};
+  const purposeMap = Object.fromEntries((data.purposes || []).map((item) => [item.name, Number(item.count) || 0]));
+  const names = ["사격", "훈련", "정비", "근무", "기타", "젤루텍"];
+  const countOf = (name) => purposeMap[name] || 0;
   const sum = names.reduce((n, name) => n + countOf(name), 0);
   const n = (value) => value;
   const pair = (a, b) => `<tr><th>${escapeAttr(purposeTitle(data, a))}</th><td>${a ? n(countOf(a)) : ""}</td><th>${escapeAttr(purposeTitle(data, b))}</th><td>${b ? n(countOf(b)) : ""}</td></tr>`;
-  const sensor = data.locker && data.locker.sensor;
+  const sensor = locker.sensor;
   const scanners = [1, 2, 3, 4].map((no) => `
     <button type="button" class="scanner ${no === 1 && sensor ? "on" : ""}" data-scanner="${no}">${scannerIcon()}<span>스캐너 #${no}</span></button>`).join("");
   box.innerHTML = `
-    <table class="box"><caption>소총 보관 현황</caption>
-      <tr><th>보관함</th><td colspan="3">${fleet.total.bays}</td></tr>
-      <tr><th>보관</th><td>${n(fleet.total.stored)}</td><th>불출</th><td>${n(fleet.total.issued)}</td></tr>
-      <tr><th>미지급</th><td>${n(fleet.total.unpaid)}</td><th>미등록</th><td>${n(fleet.total.empty)}</td></tr>
-      <tr><th>전체 수량</th><td colspan="3">${n(fleet.total.registered)}</td></tr>
-    </table>
-    <table class="box"><caption>불 출 현 황</caption>
-      ${pair(names[0], names[1])}
-      ${pair(names[2], names[3])}
-      ${pair(names[4], names[5])}
-      <tr><th>계</th><td colspan="3">${n(sum)}</td></tr>
-    </table>
-    <div class="scanners">${scanners}</div>`;
+    <table class="box"><caption>${escapeAttr(title)}</caption>
+        <tr><th>보관</th><td>${n(summary.stored || 0)}</td><th>불출</th><td>${n(summary.issued || 0)}</td></tr>
+        <tr><th>미지급</th><td>${n(summary.empty || 0)}</td><th>미등록</th><td>${n(summary.empty || 0)}</td></tr>
+        <tr><th>등록</th><td colspan="3">${n(summary.registered || 0)}</td></tr>
+      </table>
+      <table class="box"><caption>불 출 현 황</caption>
+        ${pair(names[0], names[1])}
+        ${pair(names[2], names[3])}
+        ${pair(names[4], names[5])}
+        <tr><th>계</th><td colspan="3">${n(sum)}</td></tr>
+      </table>
+      <div class="scanners">${scanners}</div>
+`;
   box.querySelectorAll("[data-scanner]").forEach((btn) => {
     btn.onclick = () => {
       const no = Number(btn.dataset.scanner);
@@ -181,10 +207,23 @@ function paintStats() {
 }
 
 function slotLabel(slot) {
-  const person = slot.person;
-  if (person && (person.rank || person.name)) return `${person.rank || ""} ${person.name || ""}`.trim();
-  if (slot.live_name) return slot.live_name;
-  return `사용자${slot.slot}`;
+  const person = slot.person || {};
+  let rank = String(person.rank || "").trim();
+  let name = String(person.name || "").trim();
+  if (!rank && !name) {
+    const raw = String(slot.live_name || "").trim();
+    const cut = raw.indexOf(" ");
+    if (cut > 0 && cut <= 4) {
+      rank = raw.slice(0, cut);
+      name = raw.slice(cut + 1).trim();
+    } else {
+      name = raw;
+    }
+  }
+  if (slot.enrolled && (rank || name)) {
+    return `<small>${escapeAttr(rank)}</small><span>${escapeAttr(name)}</span>`;
+  }
+  return `<span>사용자${slot.slot}</span>`;
 }
 
 function paintGrid() {
@@ -194,23 +233,113 @@ function paintGrid() {
     panel.innerHTML = "";
     return;
   }
-  const names = [];
-  const rifles = [];
-  (data.slots || []).forEach((slot) => {
-    const stored = slot.enrolled && slot.present;
-    const img = slot.enrolled
-      ? `<img class="pi-rifle ${stored ? "is-in" : "is-out"}" src="/assets/rifle.png" alt="" />`
-      : "";
-    names.push(`<div class="pi-name">${escapeAttr(slotLabel(slot))}</div>`);
-    rifles.push(`<div class="pi-cell">${img}</div>`);
-  });
-  panel.innerHTML = `
-    <div class="pi-lockers">
-      <div class="pi-names">${names.join("")}</div>
-      <div class="pi-rifles">${rifles.join("")}</div>
+  const kind = data.locker && data.locker.kind === "pistol" ? "pistol" : "rifle";
+  if (kind === "pistol") {
+    panel.innerHTML = paintPistolGrid(data);
+  } else {
+    const names = [];
+    const rifles = [];
+    (data.slots || []).forEach((slot) => {
+      const stored = slot.enrolled && slot.present;
+      const img = slot.enrolled
+        ? `<img class="pi-rifle ${stored ? "is-in" : "is-out"}" src="/assets/rifle.png" alt="" />`
+        : "";
+      names.push(`<div class="pi-name">${slotLabel(slot)}</div>`);
+      rifles.push(`<div class="pi-cell">${img}</div>`);
+    });
+    panel.innerHTML = `
+      <div class="pi-lockers">
+        <div class="pi-names">${names.join("")}</div>
+        <div class="pi-rifles">${rifles.join("")}</div>
+      </div>
+      <div class="sheet"></div>`;
+  }
+  panel.onclick = () => openFullScreen();
+}
+
+function paintPistolGrid(data) {
+  const bySlot = {};
+  (data.slots || []).forEach((slot) => { bySlot[slot.slot] = slot; });
+  // display number 0-9 maps to user slots 1-10
+  const layout = [
+    [0, "monitor", 6],
+    [1, "fingerprint", 7],
+    [2, 4, 8],
+    [3, 5, 9],
+  ];
+  const rows = layout.map((row) => {
+    const names = [];
+    const guns = [];
+    row.forEach((cell) => {
+      if (cell === "monitor") {
+        names.push(`<div class="pi-name"><span>모니터</span></div>`);
+        guns.push(`<div class="pi-cell"><img class="pi-bay-icon" src="/assets/monitor.png" alt="모니터" /></div>`);
+        return;
+      }
+      if (cell === "fingerprint") {
+        names.push(`<div class="pi-name"><span>지문</span></div>`);
+        guns.push(`<div class="pi-cell"><img class="pi-bay-icon pi-bay-icon--fp" src="/assets/fingerprint.png" alt="지문인식기" /></div>`);
+        return;
+      }
+      const slotNo = Number(cell) + 1;
+      const slot = bySlot[slotNo] || { slot: slotNo, enrolled: false };
+      const stored = slot.enrolled && slot.present;
+      const gun = slot.enrolled
+        ? `<img class="pi-rifle ${stored ? "is-in" : "is-out"}" src="/assets/pistol.png" alt="" />`
+        : "";
+      names.push(`<div class="pi-name">${slotLabel(slot)}</div>`);
+      guns.push(`<div class="pi-cell">${gun}</div>`);
+    });
+    return `
+      <div class="pi-names pi-names--3">${names.join("")}</div>
+      <div class="pi-rifles pi-rifles--3">${guns.join("")}</div>`;
+  }).join("");
+  return `
+    <div class="pi-lockers pi-lockers--pistol">
+      ${rows}
     </div>
     <div class="sheet"></div>`;
-  panel.onclick = () => openFullScreen();
+}
+
+
+function visibleKey(data) {
+  if (!data) return "";
+  const slotKey = (data.slots || []).map((slot) => [
+    slot.slot,
+    slot.enrolled ? 1 : 0,
+    slot.present ? 1 : 0,
+    (slot.person && slot.person.rank) || "",
+    (slot.person && slot.person.name) || "",
+    slot.live_name || "",
+  ].join(",")).join(";");
+  const boardKey = (data.boards || []).map((board) => [
+    board.id,
+    board.name,
+    board.online ? 1 : 0,
+    board.linking ? 1 : 0,
+    board.selected ? 1 : 0,
+    board.kind || "",
+    board.registered || 0,
+    board.issued || 0,
+    board.stored || 0,
+    board.empty || 0,
+    board.sensor ? 1 : 0,
+    (board.purposes || []).map((item) => item.count).join("."),
+  ].join(",")).join(";");
+  const who = data.who ? `${data.who.role}:${data.who.slot}` : "";
+  return [
+    who,
+    data.unit_name || "",
+    data.purpose_label || "",
+    data.memo || "",
+    (data.locker && data.locker.kind) || "",
+    (data.locker && data.locker.id) || "",
+    JSON.stringify(data.summary || {}),
+    JSON.stringify(data.purposes || []),
+    JSON.stringify(data.can || {}),
+    slotKey,
+    boardKey,
+  ].join("|");
 }
 
 function paintFrame() {
@@ -232,7 +361,7 @@ function openMenu(item) {
     return;
   }
   if (item.id === "status") openFullScreen();
-  else if (item.id === "settings") openLockerDialog(state.data.locker.id);
+  else if (item.id === "settings") openLockerDialog(state.data.locker && state.data.locker.id);
   else if (item.id === "people") openGroups();
   else if (item.id === "users") openUsers();
   else if (item.id === "guns") {
@@ -246,14 +375,19 @@ function openMenu(item) {
 function openModal(html, mode) {
   const extra = mode === true ? "narrow" : (mode || "");
   const modal = $("modal");
+  modal.className = "modal";
   modal.innerHTML = `<div class="win ${extra}">${html}</div>`;
   modal.hidden = false;
 }
 
 function closeModal() {
   state.popup = null;
-  $("modal").hidden = true;
-  $("modal").innerHTML = "";
+  const modal = $("modal");
+  modal.hidden = true;
+  modal.className = "modal";
+  modal.innerHTML = "";
+  refresh.seen = "";
+  if (state.data) paintFrame();
 }
 
 function alertBox(message, onOk) {
@@ -285,27 +419,70 @@ function dateText(date) {
   return `${date.getFullYear()}년 ${p(date.getMonth() + 1)}월 ${p(date.getDate())}일 (${week[date.getDay()]}) ${p(date.getHours())} : ${p(date.getMinutes())}`;
 }
 
+function fsTriNums(rifleVal, pistolVal, mode) {
+  if (mode && mode.split) {
+    return `<div class="fs-tri-nums">
+      <span><em>소총</em><b>${rifleVal}</b></span>
+      <span><em>권총</em><b>${pistolVal}</b></span>
+      <span><em>합계</em><b>${rifleVal + pistolVal}</b></span>
+    </div>`;
+  }
+  const value = mode && mode.pistol && !mode.rifle ? pistolVal : rifleVal;
+  return `<div class="fs-tri-nums fs-tri-nums--one"><span><b>${value}</b></span></div>`;
+}
+
 function fullScreenHtml(data) {
   const fleet = fleetOf(data);
-  const heads = fleet.names.map((name) => `<div><span>${escapeAttr(purposeTitle(data, name))}</span><b>${fleet.purposes[name] || 0}</b></div>`).join("");
-  const connected = fleet.total.bays / 10;
+  const mode = {
+    rifle: fleet.rifle.lockers > 0,
+    pistol: fleet.pistol.lockers > 0,
+  };
+  mode.split = mode.rifle && mode.pistol;
+  const heads = fleet.names.map((name) => `
+    <div>
+      <span>${escapeAttr(purposeTitle(data, name))}</span>
+      ${fsTriNums(fleet.riflePurposes[name] || 0, fleet.pistolPurposes[name] || 0, mode)}
+    </div>`).join("");
+  const link = data.link || {};
+  const talking = !!link.talking;
+  const pulse = Number(link.pulse) || 0;
+  const blink = talking && pulse !== fullScreenHtml.seen;
+  fullScreenHtml.seen = talking ? pulse : -1;
+  const stored = mode.split ? fleet.total.stored : (mode.pistol ? fleet.pistol.stored : fleet.rifle.stored);
+  const issued = mode.split ? fleet.total.issued : (mode.pistol ? fleet.pistol.issued : fleet.rifle.issued);
+  const kindStored = mode.split ? `
+            <div class="fs-kind-row">
+              <div class="fs-kind-card"><h3>소총</h3><b>${fleet.rifle.stored}</b></div>
+              <div class="fs-kind-card"><h3>권총</h3><b>${fleet.pistol.stored}</b></div>
+            </div>` : "";
+  const kindIssued = mode.split ? `
+            <div class="fs-kind-row">
+              <div class="fs-kind-card"><h3>소총</h3><b>${fleet.rifle.issued}</b></div>
+              <div class="fs-kind-card"><h3>권총</h3><b>${fleet.pistol.issued}</b></div>
+            </div>` : "";
   return `
     <div class="fs">
       <div class="fs-top">
         <img class="fs-logo" src="/assets/zellootec.png" alt="ZELLOOTEC" />
-        <h2>소 총 보 관 현 황</h2>
-        <i class="fs-dot"></i>
+        <h2>총기 보관현황</h2>
+        <i class="fs-dot${talking ? "" : " off"}${blink ? " blink" : ""}"></i>
       </div>
-      <p class="no-print" style="text-align:center;margin:8px 0 0;color:#666">연결된 보관함 ${connected}대</p>
       <div class="fs-dash">
         <div class="fs-side">
-          <div class="fs-line"><span class="fs-pill">등록</span><b class="fs-num">${fleet.total.registered}</b></div>
-          <div class="fs-line"><span class="fs-pill">불출</span><b class="fs-num">${fleet.total.issued}</b></div>
+          <div class="fs-line"><span class="fs-pill">등록</span>${fsTriNums(fleet.rifle.registered, fleet.pistol.registered, mode)}</div>
         </div>
-        <div class="fs-hero"><span>보관 수량</span><strong>${fleet.total.stored}</strong></div>
+        <div class="fs-mid">
+          <div class="fs-hero">
+            <span>보관 수량</span>
+            <strong>${stored}</strong>${kindStored}
+          </div>
+          <div class="fs-hero fs-hero--out">
+            <span>불출 수량</span>
+            <strong>${issued}</strong>${kindIssued}
+          </div>
+        </div>
         <div class="fs-side right">
-          <div class="fs-line"><b class="fs-num">${fleet.total.empty}</b><span class="fs-pill">미등록</span></div>
-          <div class="fs-line"><b class="fs-num">${fleet.total.unpaid}</b><span class="fs-pill">미지급</span></div>
+          <div class="fs-line">${fsTriNums(fleet.rifle.unpaid, fleet.pistol.unpaid, mode)}<span class="fs-pill">미지급</span></div>
         </div>
       </div>
       <div class="fs-date" id="fullDate">${dateText(new Date())}</div>
@@ -572,8 +749,12 @@ function gunModels(data, current) {
 }
 
 function openUsers() {
-  state.popup = () => openUsers();
   const data = state.data;
+  if (!data || !data.locker) {
+    toast("보관함을 먼저 등록하세요.");
+    return;
+  }
+  state.popup = () => openUsers();
   const row = data.slots.find((slot) => slot.slot === state.selected) || data.slots[0];
   state.selected = row.slot;
   const person = row.person || {};
@@ -592,15 +773,15 @@ function openUsers() {
         <input type="hidden" name="slot" value="${row.slot}" />
         <table class="form-table">
           <tr><th>보관함</th><td>${escapeAttr(data.locker.name)}</td></tr>
-          <tr><th>계 급</th><td><input name="rank" maxlength="4" value="${escapeAttr(person.rank || "")}" ${row.locked ? "readonly" : ""} /></td></tr>
-          <tr><th>군 번</th><td><input name="sn" maxlength="10" value="${escapeAttr(person.sn || "")}" ${row.locked ? "readonly" : ""} /></td></tr>
-          <tr><th>성 명</th><td><input name="name" maxlength="5" value="${escapeAttr(person.name || "")}" ${row.locked ? "readonly" : ""} /></td></tr>
-          <tr><th>총기종류</th><td><select name="model" ${row.locked ? "disabled" : ""}>${options}</select></td></tr>
-          <tr><th>총기번호</th><td><input name="serial" maxlength="20" value="${escapeAttr(gun.serial || "")}" ${row.locked ? "readonly" : ""} /></td></tr>
+          <tr><th>계 급</th><td><input name="rank" maxlength="4" value="${escapeAttr(person.rank || "")}" /></td></tr>
+          <tr><th>군 번</th><td><input name="sn" maxlength="10" value="${escapeAttr(person.sn || "")}" /></td></tr>
+          <tr><th>성 명</th><td><input name="name" maxlength="5" value="${escapeAttr(person.name || "")}" /></td></tr>
+          <tr><th>총기종류</th><td><select name="model">${options}</select></td></tr>
+          <tr><th>총기번호</th><td><input name="serial" maxlength="20" value="${escapeAttr(gun.serial || "")}" /></td></tr>
         </table>
         <div class="win-actions">
-          <button class="gb" type="button" id="deleteUser" ${row.locked || !row.person ? "disabled" : ""}>삭제</button>
-          <button class="gb" type="submit" ${row.locked ? "disabled" : ""}>저장</button>
+          <button class="gb" type="button" id="deleteUser" ${row.enrolled || !row.person ? "disabled" : ""} title="${row.enrolled ? "지문이 등록되어 있으면 보관함에서 지문을 먼저 삭제하세요." : ""}">삭제</button>
+          <button class="gb" type="submit">저장</button>
           <button class="gb" type="button" id="closeUsers">취소</button>
         </div>
         <div class="scroll"><table class="grid-table"><thead><tr><th>No.</th><th>계 급</th><th>군 번</th><th>성 명</th><th>총기종류</th><th>총기번호</th></tr></thead><tbody>${list}</tbody></table></div>
@@ -641,7 +822,7 @@ function openGuns() {
   const picked = Number.isInteger(state.gunIndex) ? catalog[state.gunIndex] : null;
   const category = picked ? picked.category : "권총";
   const options = ["권총", "소총", "기타"].map((name) => `<option ${name === category ? "selected" : ""}>${name}</option>`).join("");
-  const order = picked ? picked.no : data.locker.name;
+  const order = picked ? picked.no : ((data.locker && data.locker.name) || "");
   const list = catalog.map((item) => `<tr class="${picked && item.index === picked.index ? "on" : ""}" data-index="${item.index}"><td>${item.no}</td><td>${escapeAttr(item.model)}</td></tr>`).join("");
   openModal(`
     <h3 class="win-title">총기목록</h3>
@@ -708,20 +889,74 @@ function openIssue() {
       <table class="form-table">
         <tr>${fixed("사격")}${fixed("훈련")}</tr>
         <tr>${fixed("정비")}${fixed("근무")}</tr>
-        <tr>${fixed("기타")}<th>젤루텍</th><td><input id="issueLabel" maxlength="10" value="${escapeAttr(label)}" /></td></tr>
+        <tr>${fixed("기타")}<th class="issue-name-cell"><input id="issueLabel" class="purpose-free" type="text" maxlength="10" autocomplete="off" spellcheck="false" value="${escapeAttr(label)}" /></th><td><input value="${escapeAttr(label)}" readonly tabindex="-1" /></td></tr>
       </table>
       <div class="win-actions">
         <button type="button" class="gb" id="saveIssue">저장</button>
         <button type="button" class="gb" id="closeIssue">취소</button>
       </div>
     </div>`, true);
+  const issueField = $("issueLabel");
+  issueField.readOnly = false;
+  issueField.disabled = false;
+  issueField.removeAttribute("readonly");
+  issueField.focus();
+  issueField.select();
   $("closeIssue").onclick = closeModal;
-  $("saveIssue").onclick = async () => {
-    const result = await post("/api/purpose", { label: $("issueLabel").value });
+  const saveLabel = async () => {
+    const result = await post("/api/purpose", { label: issueField.value });
     if (!result.ok) {
       alertBox(result.data.error || "저장하지 못했습니다.");
       return;
     }
+    if (state.data) state.data.purpose_label = result.data.label || "젤루텍";
+    toast("저장했습니다.");
+    await refresh(false);
+  };
+  $("saveIssue").onclick = saveLabel;
+  issueField.onkeydown = (ev) => {
+    if (ev.key === "Enter") {
+      ev.preventDefault();
+      saveLabel();
+    }
+  };
+}
+
+function openUnitDialog() {
+  if (!state.data || !state.data.can || !state.data.can.manage) {
+    toast(state.data && state.data.who ? "이 계정으로는 이 화면을 열 수 없습니다." : "로그인한 뒤에 사용할 수 있습니다.");
+    return;
+  }
+  const name = (state.data.unit_name || "지문인식").trim() || "지문인식";
+  state.popup = openUnitDialog;
+  openModal(`
+    <h3 class="win-title">부대이름</h3>
+    <form id="unitForm">
+      <div class="win-body">
+        <table class="form-table">
+          <tr><th>부대이름</th><td><input id="unitName" name="name" maxlength="20" autocomplete="off" value="${escapeAttr(name)}" /></td></tr>
+        </table>
+        <div class="win-actions">
+          <button class="gb" type="submit">저장</button>
+          <button class="gb" type="button" id="addFromUnit">보관함 추가</button>
+          <button class="gb" type="button" id="closeUnit">취소</button>
+        </div>
+      </div>
+    </form>`, true);
+  $("closeUnit").onclick = closeModal;
+  const field = $("unitName");
+  field.focus();
+  field.select();
+  $("addFromUnit").onclick = () => openLockerDialog(null);
+  $("unitForm").onsubmit = async (ev) => {
+    ev.preventDefault();
+    const result = await post("/api/unit", { name: field.value });
+    if (!result.ok) {
+      alertBox(result.data.error || "저장하지 못했습니다.");
+      return;
+    }
+    if (state.data) state.data.unit_name = result.data.name || "지문인식";
+    closeModal();
     toast("저장했습니다.");
     await refresh(false);
   };
@@ -729,7 +964,11 @@ function openIssue() {
 
 function openLockerDialog(id) {
   const adding = !id;
-  const board = adding ? null : (state.data.boards || []).find((item) => item.id === id) || state.data.locker;
+  const board = adding ? null : (state.data.boards || []).find((item) => item.id === id) || (state.data.locker && state.data.locker.id === id ? state.data.locker : null);
+  if (!adding && !board) {
+    toast("보관함을 찾지 못했습니다.");
+    return;
+  }
   state.popup = () => openLockerDialog(id);
   openModal(`
     <h3 class="win-title">보관함 설정</h3>
@@ -766,13 +1005,36 @@ function openLockerDialog(id) {
     await refresh(false);
   };
   const del = $("deleteLocker");
-  if (del && !adding) del.onclick = () => confirmDelete("/api/locker/delete", { id: board.id }, "이 보관함 등록을 지우겠습니까?");
+  if (del && !adding) del.onclick = () => askBox("이 보관함 등록을 지우겠습니까?", "YES", async () => {
+    const result = await post("/api/locker/delete", { id: board.id });
+    if (!result.ok) {
+      alertBox(result.data.error || "삭제하지 못했습니다.");
+      return;
+    }
+    state.popup = null;
+    closeModal();
+    toast("삭제했습니다.");
+    await refresh(false);
+  });
+}
+
+function selectedLocker() {
+  return (state.data && state.data.locker) || null;
 }
 
 function openHistory() {
   state.popup = openHistory;
+  const locker = selectedLocker();
+  const title = locker && locker.name ? `${locker.name} 이력관리` : "이력관리";
   openModal(`
-    <h3 class="win-title">이력관리</h3>
+    <div class="win-caption">
+      <h3>${escapeAttr(title)}</h3>
+      <div class="win-chrome">
+        <button type="button" class="cap cap-min" id="histMin" aria-label="최소화"></button>
+        <button type="button" class="cap cap-max" id="histMax" aria-label="최대화"></button>
+        <button type="button" class="cap cap-close" id="histClose" aria-label="닫기"></button>
+      </div>
+    </div>
     <div class="win-body">
       <form class="filters" id="historyForm">
         <span>기간</span>
@@ -781,72 +1043,283 @@ function openHistory() {
         <label><input type="radio" name="find" value="sn" /> 군번</label>
         <label><input type="radio" name="find" value="name" /> 이름</label>
         <input name="word" />
-        <button class="gb" type="button" id="csvBtn" disabled>저장</button>
-        <button class="gb" type="button" id="printBtn" disabled>인쇄</button>
         <button class="gb" type="submit">검색</button>
+        <button class="gb" type="button" id="printBtn" disabled>인쇄</button>
+        <button class="gb" type="button" id="csvBtn" disabled>저장</button>
         <button class="gb" type="button" id="closeHistory">닫기 (ESC)</button>
       </form>
-      <div class="scroll" id="historyTable"><table class="history-table"><thead><tr><th>No.</th><th>이벤트 시간</th><th>구분</th><th>타입</th><th>군번</th><th>이름</th><th>이벤트 로그</th></tr></thead><tbody></tbody></table></div>
-    </div>`);
+      <div class="scroll" id="historyTable"><table class="history-table"><thead><tr><th>No.</th><th>총기 수불 시간</th><th>구분</th><th>타입</th><th>군번</th><th>이름</th><th>내용</th></tr></thead><tbody></tbody></table></div>
+    </div>`, "history");
+  const modal = $("modal");
+  const maxBtn = $("histMax");
+  const syncMax = () => maxBtn.classList.toggle("is-restore", modal.classList.contains("history-max"));
+  $("histClose").onclick = closeModal;
+  $("histMin").onclick = () => {
+    if (modal.classList.contains("history-min")) {
+      modal.classList.remove("history-min");
+      return;
+    }
+    modal.classList.remove("history-max");
+    modal.classList.add("history-min");
+    syncMax();
+  };
+  maxBtn.onclick = () => {
+    modal.classList.remove("history-min");
+    modal.classList.toggle("history-max");
+    syncMax();
+  };
   $("closeHistory").onclick = closeModal;
   $("historyForm").onsubmit = (ev) => { ev.preventDefault(); loadHistory(); };
   $("csvBtn").onclick = () => downloadHistory(historyView);
-  $("printBtn").onclick = () => window.print();
+  $("printBtn").onclick = () => printHistory();
+  paintHistoryRows((state.data && state.data.history) || [], true);
   loadHistory(true);
 }
 
-async function loadHistory(initial) {
-  const form = $("historyForm");
-  if (!form) return;
-  const body = formValues(form);
-  historyQuery = { from: body.from || "", to: body.to || "" };
-  if (!initial) {
-    if (body.find === "sn") historyQuery.sn = body.word || "";
-    if (body.find === "name") historyQuery.name = body.word || "";
+function printHistory() {
+  const heading = document.querySelector("#modal .win-caption h3");
+  const title = heading ? heading.textContent : "이력관리";
+  const table = document.querySelector("#historyTable table");
+  if (!table) return;
+  const frame = document.createElement("iframe");
+  frame.setAttribute("aria-hidden", "true");
+  frame.style.cssText = "position:fixed;left:-10000px;top:0;width:194mm;height:240mm;border:0;";
+  document.body.appendChild(frame);
+  const doc = frame.contentDocument;
+  doc.open();
+  doc.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>${escapeAttr(title)}</title><style>
+    @page { size: A4 portrait; margin: 10mm 8mm; }
+    html, body { margin: 0; background: #fff; color: #222; font-family: "Malgun Gothic", "Segoe UI", sans-serif; }
+    h1 { margin: 0 0 8px; text-align: center; font-size: 14pt; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; font-size: 8pt; background: #fff; }
+    th, td { border: 1px solid #b5b5b5; padding: 3px 4px; text-align: center; vertical-align: middle; line-height: 1.2; white-space: nowrap; }
+    th:nth-child(2), td:nth-child(2) { white-space: normal; }
+    thead th { background: #f5f5f5; }
+    tr, th, td { break-inside: avoid; }
+  </style></head><body><h1>${escapeAttr(title)}</h1>${table.outerHTML}</body></html>`);
+  doc.close();
+  const printed = frame.contentDocument.querySelector("table");
+  if (printed) {
+    const limit = frame.contentDocument.documentElement.clientWidth;
+    let size = 8;
+    while (size > 6) {
+      printed.style.fontSize = size + "pt";
+      const wrapped = Array.from(printed.querySelectorAll("th, td")).some((cell) => cell.cellIndex !== 1 && cell.scrollWidth > cell.clientWidth + 1);
+      if (!wrapped && printed.scrollWidth <= limit + 1) break;
+      size -= 0.5;
+    }
   }
-  const result = await api("/api/history?" + new URLSearchParams(historyQuery).toString());
-  let rows = result.data.rows || [];
-  if (!initial && body.find === "type" && body.word) {
-    const word = body.word;
-    rows = rows.filter((row) => `${row.model || ""} ${row.detail || ""} ${row.action || ""} ${row.purpose || ""}`.includes(word));
-  }
-  historyView = rows;
+  const win = frame.contentWindow;
+  const cleanup = () => { if (frame.parentNode) frame.remove(); };
+  win.addEventListener("afterprint", cleanup);
+  setTimeout(() => {
+    win.focus();
+    win.print();
+  }, 60);
+  setTimeout(cleanup, 2000);
+}
+
+function historyTableHtml(rows, note) {
+  const body = rows.length
+    ? rows.map((row, index) => `<tr><td>${index + 1}</td><td>${escapeAttr(row.time)}</td><td>${escapeAttr(row.locker)}</td><td>${escapeAttr(row.model || row.category || "")}</td><td>${escapeAttr(row.sn)}</td><td>${escapeAttr(row.name)}</td><td>${escapeAttr(row.detail)}</td></tr>`).join("")
+    : `<tr><td colspan="7">${escapeAttr(note || "표시할 이력이 없습니다.")}</td></tr>`;
+  return `<table class="history-table"><thead><tr><th>No.</th><th>총기 수불 시간</th><th>구분</th><th>타입</th><th>군번</th><th>이름</th><th>내용</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function paintHistoryRows(rows, ready) {
   const table = $("historyTable");
   if (!table) return;
-  table.innerHTML = `<table class="history-table"><thead><tr><th>No.</th><th>이벤트 시간</th><th>구분</th><th>타입</th><th>군번</th><th>이름</th><th>이벤트 로그</th></tr></thead><tbody>
-    ${rows.map((row, index) => `<tr><td>${index + 1}</td><td>${escapeAttr(row.time)}</td><td>${escapeAttr(row.locker)}</td><td>${escapeAttr(row.model || row.category || "")}</td><td>${escapeAttr(row.sn)}</td><td>${escapeAttr(row.name)}</td><td>${escapeAttr(row.detail)}</td></tr>`).join("")}
-  </tbody></table>`;
-  const ready = Boolean(result.ok);
+  historyView = rows;
+  const locker = selectedLocker();
+  const note = ready
+    ? `${(locker && locker.name) || "이 보관함"}에 기록된 불출·보관 이력이 없습니다.`
+    : "이력을 불러오는 중입니다.";
+  table.innerHTML = historyTableHtml(rows, note);
   const csv = $("csvBtn");
   const print = $("printBtn");
   if (csv) csv.disabled = !ready;
   if (print) print.disabled = !ready;
 }
 
-function csvCell(value) {
-  const text = String(value == null ? "" : value);
-  return `"${text.replaceAll('"', '""')}"`;
+async function loadHistory(initial) {
+  const form = $("historyForm");
+  if (!form) return;
+  const body = formValues(form);
+  const locker = selectedLocker();
+  const heading = document.querySelector("#modal .win-caption h3");
+  if (heading && locker && locker.name) heading.textContent = `${locker.name} 이력관리`;
+  historyQuery = { from: body.from || "", to: body.to || "" };
+  if (locker && locker.id) historyQuery.locker_id = locker.id;
+  if (!initial) {
+    if (body.find === "sn") historyQuery.sn = body.word || "";
+    if (body.find === "name") historyQuery.name = body.word || "";
+  }
+  const result = await api("/api/history?" + new URLSearchParams(historyQuery).toString());
+  if (!$("historyTable")) return;
+  if (!result.ok) {
+    paintHistoryRows([], false);
+    const table = $("historyTable");
+    if (table) table.innerHTML = historyTableHtml([], result.data.error || "이력을 불러오지 못했습니다. 로그인한 뒤 다시 열어 주세요.");
+    return;
+  }
+  let rows = result.data.rows || [];
+  if (!initial && body.find === "type" && body.word) {
+    const word = body.word;
+    rows = rows.filter((row) => `${row.model || ""} ${row.detail || ""} ${row.action || ""} ${row.purpose || ""}`.includes(word));
+  }
+  if (state.data) state.data.history = rows;
+  paintHistoryRows(rows, true);
 }
 
-function downloadHistory(rows) {
-  const header = ["No.", "이벤트 시간", "구분", "타입", "군번", "이름", "이벤트 로그"];
-  const lines = [header.map(csvCell).join(",")];
-  rows.forEach((row, index) => {
-    lines.push([
-      index + 1,
-      row.time,
-      row.locker,
-      row.model || row.category || "",
-      row.sn,
-      row.name,
-      row.detail,
-    ].map(csvCell).join(","));
+function historyCells(rows) {
+  const header = ["No.", "총기 수불 시간", "구분", "타입", "군번", "이름", "내용"];
+  const body = rows.map((row, index) => [
+    String(index + 1),
+    row.time || "",
+    row.locker || "",
+    row.model || row.category || "",
+    row.sn || "",
+    row.name || "",
+    row.detail || "",
+  ]);
+  return { header, body };
+}
+
+function fitCanvasText(ctx, text, width) {
+  let value = String(text == null ? "" : text);
+  if (ctx.measureText(value).width <= width) return value;
+  while (value.length > 1 && ctx.measureText(value + "…").width > width) value = value.slice(0, -1);
+  return value + "…";
+}
+
+function renderHistoryPages(title, header, body) {
+  const width = 1240;
+  const height = 1754;
+  const margin = 64;
+  const cols = [80, 230, 180, 90, 190, 140, 202];
+  const tableWidth = cols.reduce((sum, n) => sum + n, 0);
+  const rowH = 46;
+  const headH = 52;
+  const pages = [];
+  let index = 0;
+  const drawHeader = (ctx, y) => {
+    ctx.font = "700 18px Malgun Gothic, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#f5f5f5";
+    ctx.fillRect(margin, y, tableWidth, headH);
+    ctx.strokeStyle = "#666";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(margin, y, tableWidth, headH);
+    let x = margin;
+    ctx.fillStyle = "#222";
+    header.forEach((label, i) => {
+      if (i) ctx.beginPath(), ctx.moveTo(x, y), ctx.lineTo(x, y + headH), ctx.stroke();
+      ctx.fillText(label, x + cols[i] / 2, y + headH / 2);
+      x += cols[i];
+    });
+    return y + headH;
+  };
+  while (index < body.length || pages.length === 0) {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#222";
+    ctx.font = "700 36px Malgun Gothic, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(title, width / 2, 78);
+    let y = drawHeader(ctx, 120);
+    ctx.font = "15px Malgun Gothic, sans-serif";
+    const limit = height - 64;
+    while (index < body.length && y + rowH <= limit) {
+      const cells = body[index];
+      ctx.strokeStyle = "#666";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(margin, y, tableWidth, rowH);
+      let x = margin;
+      ctx.fillStyle = "#222";
+      ctx.textAlign = "center";
+      cells.forEach((cell, i) => {
+        if (i) ctx.beginPath(), ctx.moveTo(x, y), ctx.lineTo(x, y + rowH), ctx.stroke();
+        ctx.fillText(fitCanvasText(ctx, cell, cols[i] - 16), x + cols[i] / 2, y + rowH / 2);
+        x += cols[i];
+      });
+      y += rowH;
+      index += 1;
+    }
+    if (!body.length) {
+      ctx.font = "15px Malgun Gothic, sans-serif";
+      ctx.fillText("표시할 이력이 없습니다.", width / 2, y + 40);
+    }
+    pages.push(canvas);
+    if (!body.length) break;
+  }
+  return pages;
+}
+
+function pdfFromJpegs(jpegs) {
+  const encoder = new TextEncoder();
+  const chunks = [];
+  let length = 0;
+  const pushStr = (text) => {
+    const bytes = encoder.encode(text);
+    chunks.push(bytes);
+    length += bytes.length;
+  };
+  const pushBin = (bytes) => {
+    chunks.push(bytes);
+    length += bytes.length;
+  };
+  const offsets = [];
+  pushStr("%PDF-1.4\n");
+  offsets.push(length);
+  pushStr("1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n");
+  const kids = jpegs.map((_, i) => `${3 + i * 3} 0 R`).join(" ");
+  offsets.push(length);
+  pushStr(`2 0 obj << /Type /Pages /Count ${jpegs.length} /Kids [${kids}] >> endobj\n`);
+  jpegs.forEach((jpeg, i) => {
+    const pageId = 3 + i * 3;
+    const content = `q 571 0 0 817 12 12 cm /Im${i} Do Q\n`;
+    offsets.push(length);
+    pushStr(`${pageId} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Contents ${pageId + 1} 0 R /Resources << /XObject << /Im${i} ${pageId + 2} 0 R >> >> >> endobj\n`);
+    offsets.push(length);
+    pushStr(`${pageId + 1} 0 obj << /Length ${content.length} >> stream\n${content}endstream endobj\n`);
+    offsets.push(length);
+    pushStr(`${pageId + 2} 0 obj << /Type /XObject /Subtype /Image /Width ${jpeg.width} /Height ${jpeg.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.bytes.length} >> stream\n`);
+    pushBin(jpeg.bytes);
+    pushStr("\nendstream endobj\n");
   });
-  const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
+  const xrefAt = length;
+  let xref = `xref\n0 ${offsets.length + 1}\n0000000000 65535 f \n`;
+  offsets.forEach((offset) => { xref += `${String(offset).padStart(10, "0")} 00000 n \n`; });
+  pushStr(xref);
+  pushStr(`trailer << /Size ${offsets.length + 1} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF`);
+  const out = new Uint8Array(length);
+  let pos = 0;
+  chunks.forEach((chunk) => { out.set(chunk, pos); pos += chunk.length; });
+  return out;
+}
+
+async function downloadHistory(rows) {
+  const heading = document.querySelector("#modal .win-caption h3");
+  const title = heading ? heading.textContent : "이력관리";
+  const { header, body } = historyCells(rows || []);
+  const canvases = renderHistoryPages(title, header, body);
+  const jpegs = [];
+  for (const canvas of canvases) {
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+    jpegs.push({ width: canvas.width, height: canvas.height, bytes: new Uint8Array(await blob.arrayBuffer()) });
+  }
+  const pdf = pdfFromJpegs(jpegs);
+  const url = URL.createObjectURL(new Blob([pdf], { type: "application/pdf" }));
   const link = document.createElement("a");
   link.href = url;
-  link.download = "이력관리.csv";
+  const lockerName = (selectedLocker() && selectedLocker().name) || "보관함";
+  link.download = lockerName + " 이력관리.pdf";
   link.click();
   URL.revokeObjectURL(url);
 }
@@ -890,20 +1363,25 @@ async function refresh(soft) {
     toast("프로그램 연결이 끊겼습니다. 창을 닫고 OMS.bat 을 다시 실행하세요.");
     return;
   }
-  if (!result.data || !result.data.locker) return;
+  if (!result.data || !Array.isArray(result.data.boards)) return;
+  const prevLocker = state.data && state.data.locker && state.data.locker.id;
   state.data = result.data;
+  const nextLocker = result.data.locker && result.data.locker.id;
+  if (!$("modal").hidden && $("historyForm") && prevLocker !== nextLocker) loadHistory(false);
   const layer = $("fullScreen");
   if (layer && !layer.hidden) {
-    layer.innerHTML = fullScreenHtml(state.data);
-    const close = $("closeFull");
-    if (close) close.onclick = closeFullScreen;
+    const next = fullScreenHtml(state.data);
+    if (layer.dataset.view !== next) {
+      layer.dataset.view = next;
+      layer.innerHTML = next;
+      const close = $("closeFull");
+      if (close) close.onclick = closeFullScreen;
+    }
   }
-  if (soft && (typing || !$("modal").hidden)) {
-    paintChrome();
-    paintStats();
-    paintGrid();
-    return;
-  }
+  if (!$("modal").hidden || (soft && typing)) return;
+  const key = visibleKey(state.data);
+  if (key === refresh.seen) return;
+  refresh.seen = key;
   paintFrame();
   if (!soft && state.popup) state.popup();
 }
@@ -930,13 +1408,29 @@ document.addEventListener("keydown", (ev) => {
   if (ev.ctrlKey && (ev.key === "m" || ev.key === "M")) closeFullScreen();
 });
 
+function bindToolbar() {
+  const nav = $("toolbar");
+  if (!nav || nav.dataset.bound) return;
+  nav.dataset.bound = "1";
+  nav.addEventListener("pointerdown", (ev) => {
+    if (ev.button != null && ev.button !== 0) return;
+    const btn = ev.target.closest("[data-nav]");
+    if (!btn) return;
+    const item = NAV.find((entry) => entry.id === btn.dataset.nav);
+    if (!item) return;
+    ev.preventDefault();
+    openMenu(item);
+  });
+}
+
+bindToolbar();
 $("memoSave").onclick = saveMemo;
 $("memoLoad").onclick = async () => { await refresh(true); toast("메모를 다시 읽었습니다."); };
 $("memoMenu").onclick = () => $("memoText").focus();
 window.addEventListener("resize", alignLeftColumn);
 
 refresh(false);
-setInterval(() => refresh(true), 2000);
+setInterval(() => refresh(true), 400);
 setInterval(() => {
   const date = $("fullDate");
   if (date) date.textContent = dateText(new Date());

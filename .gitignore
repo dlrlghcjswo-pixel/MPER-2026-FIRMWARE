@@ -1,3 +1,63 @@
-fingerprint/
+# Local / IDE / temp
+.cursor/**
+!.cursor/rules/
+!.cursor/rules/**
+_build_tmp/
 **/__pycache__/
 *.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+
+# Vendor RFID SDK samples (runtime uses armory/oms/rfid_runtime)
+RFID/
+
+# Site-local OMS config / secrets / recordings (copy per PC)
+windows/oms/oms.json
+armory/oms/oms.json
+armory/oms/cctv.json
+armory/oms/patlite.json
+armory/oms/rfid.json
+armory/oms/data/
+armory/oms/_deps/
+armory/oms/_vendor/
+armory/oms/build/
+armory/oms/dist/
+armory/oms/_portable/
+armory/oms/_test_patlite.py
+armory/oms/_tmp_*.py
+
+# PyInstaller / backup binaries (keep only current production exes)
+**/OMS.exe.*
+**/*.exe.bak*
+**/*.exe.prev
+**/*.exe.old
+**/*.exe.locker-old
+**/oms_update.exe
+windows/oms/스마트 총기 보관함 OMS.*
+!windows/oms/스마트 총기 보관함 OMS.exe
+armory/oms/스마트 총기 보관함 OMS.*
+armory/oms/스마트 무기고 시스템.exe.bak*
+armory/oms/스마트 무기고 시스템.exe.prev
+
+# Firmware build products
+*.elf
+*.o
+*.a
+
+# Raspberry local runtime (per-device)
+fingerprint/data/
+fingerprint/logs/
+fingerprint/.venv/
+fingerprint/bin/
+fingerprint/**/*.so
+armory/raspberry/data/
+armory/raspberry/logs/
+armory/raspberry/.venv/
+armory/raspberry/bin/
+armory/raspberry/**/*.so

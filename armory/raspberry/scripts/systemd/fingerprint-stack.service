@@ -1,0 +1,16 @@
+[Unit]
+Description=Fingerprint locker stack (daemon + UI)
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/fingerprint
+ExecStart=/home/pi/fingerprint/scripts/run_stack.sh
+Restart=always
+RestartSec=3
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=5
+SendSIGKILL=yes
+
+[Install]
+WantedBy=default.target

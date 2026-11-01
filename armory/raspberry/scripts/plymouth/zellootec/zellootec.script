@@ -1,0 +1,49 @@
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+theme_image = Image("splash.png");
+image_width = theme_image.GetWidth();
+image_height = theme_image.GetHeight();
+
+scale_x = image_width / screen_width;
+scale_y = image_height / screen_height;
+
+if (scale_x > 0.55 || scale_y > 0.55)
+{
+	if (scale_x > scale_y)
+	{
+		target_w = screen_width * 0.55;
+		resized_image = theme_image.Scale(target_w, image_height * target_w / image_width);
+	}
+	else
+	{
+		target_h = screen_height * 0.45;
+		resized_image = theme_image.Scale(image_width * target_h / image_height, target_h);
+	}
+}
+else
+{
+	resized_image = theme_image.Scale(image_width, image_height);
+}
+
+image_x = (screen_width - resized_image.GetWidth()) / 2;
+image_y = (screen_height - resized_image.GetHeight()) / 2;
+
+Window.SetBackgroundTopColor(1, 1, 1);
+Window.SetBackgroundBottomColor(1, 1, 1);
+
+if (Plymouth.GetMode() != "shutdown")
+{
+	sprite = Sprite(resized_image);
+	sprite.SetPosition(image_x, image_y, -100);
+}
+
+message_sprite = Sprite();
+message_sprite.SetPosition(screen_width * 0.1, screen_height * 0.9, 10000);
+
+fun message_callback (text) {
+	my_image = Image.Text(text, 0.2, 0.2, 0.2);
+	message_sprite.SetImage(my_image);
+}
+
+Plymouth.SetUpdateStatusFunction(message_callback);

@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+*.log
+
+# Build / binaries
+bin/
+*.o
+*.so
+*.a
+*.whl
+
+# Runtime data / secrets
+data/
+logs/
+*.db
+masters.json
+users.json
+.status.json
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Chromium / local caches
+.cache/
+
+# Temp verify scripts
+scripts/_verify_*.sh

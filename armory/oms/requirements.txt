@@ -1,0 +1,5 @@
+# OMS runtime extras (install into armory/oms/_deps when packaging beside sources)
+hidapi>=0.14.0
+opencv-python-headless>=4.8,<5
+mediapipe>=0.10.14
+numpy>=1.26,<3

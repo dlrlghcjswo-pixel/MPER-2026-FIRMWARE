@@ -1,0 +1,33 @@
+---
+description: armory/oms 수정 후 스마트 무기고 시스템.exe를 항상 재빌드
+globs: armory/oms/**
+alwaysApply: true
+---
+
+# Armory OMS — always rebuild exe
+
+`armory/oms/` 소스·UI·스펙을 바꾼 뒤에는 **반드시** one-file exe를 다시 빌드해 `armory/oms/스마트 무기고 시스템.exe`를 최신으로 맞춘다.
+
+- 대상: `armory/oms`의 `.py`, `static/`, `assets/`, `rfid_runtime/`, `*.spec` 등 런타임에 들어가는 변경
+- 예외: README만 고치거나 exe와 무관한 문서/임시 스크립트만 건드린 경우
+- 빌드 전에 실행 중 exe를 종료한다 (`스마트 무기고 시스템.exe`)
+- TEMP/TMP는 `D:\MPER-2026 FIRMWARE\_build_tmp` 사용 (C: 공간 부족 방지)
+- 명령:
+
+```powershell
+$oms = "D:\MPER-2026 FIRMWARE\armory\oms"
+$tmp = "D:\MPER-2026 FIRMWARE\_build_tmp"
+New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+$env:TEMP = $tmp; $env:TMP = $tmp
+$env:PYTHONPATH = "$oms\_deps"
+Get-CimInstance Win32_Process | Where-Object {
+  $_.Name -like '*무기고*' -or ($_.CommandLine -and $_.CommandLine -match 'armory\\oms')
+} | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+Start-Sleep 2
+Set-Location $oms
+python -m PyInstaller --noconfirm ".\스마트 무기고 시스템.spec"
+Copy-Item ".\dist\스마트 무기고 시스템.exe" ".\스마트 무기고 시스템.exe" -Force
+```
+
+- 작업 끝에 exe `LastWriteTime`이 방금인지 확인하고, 사용자에게 **exe 재빌드 완료**를 짧게 알린다.
+- 원격 PC에 배포할 때도 이 최신 exe를 기준으로 한다. `OMS.bat`만 고친 것으로 끝내지 않는다.

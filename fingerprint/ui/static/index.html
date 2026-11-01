@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ko" translate="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="google" content="notranslate" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>지문 인식 스마트 소총 보관함</title>
+  <link rel="stylesheet" href="/static/css/wait.css?v=53" />
+  <style>
+    @font-face {
+      font-family: "Nanum Gothic";
+      src: local("NanumGothic"), local("Nanum Gothic"),
+           url("/static/fonts/nanum-gothic.ttf?v=1") format("truetype");
+      font-weight: 100 500;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "Nanum Gothic";
+      src: local("NanumGothicBold"), local("Nanum Gothic Bold"),
+           url("/static/fonts/nanum-gothic-bold.ttf?v=1") format("truetype");
+      font-weight: 600 900;
+      font-style: normal;
+      font-display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" data-screen="standby">
+    <header class="top-bar">
+      <img class="brand-logo" src="/static/img/zellootec.jpg" alt="ZELLOOTEC 주식회사 젤루텍" />
+      <time id="clock" class="clock" datetime="">----년 --월 --일 --:--:--</time>
+    </header>
+
+    <main class="stage" id="stage">
+      <!-- 대기 -->
+      <section class="screen is-active" data-screen="standby" aria-label="대기 화면">
+        <div class="scan-block">
+          <div class="fp-icon" aria-hidden="true">
+            <svg class="fp-icon__svg" viewBox="0 0 24 24" width="52" height="52">
+              <path fill="currentColor" d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12 3c-1.97 0-3.85.47-5.56 1.41-.24.13-.54.04-.68-.2a.506.506 0 0 1 .2-.68C7.82 2.5 9.86 2 12 2s4 .47 6.04 1.5c.25.15.34.45.21.69a.48.48 0 0 1-.44.28M3.5 9.72c-.1 0-.2-.03-.29-.09a.517.517 0 0 1-.12-.7c.99-1.4 2.25-2.5 3.75-3.27C10 4.04 14 4.03 17.15 5.65c1.5.77 2.76 1.85 3.75 3.25.16.22.1.54-.12.7-.23.16-.54.11-.7-.1a9.26 9.26 0 0 0-3.39-2.96c-2.87-1.47-6.54-1.47-9.4.01-1.36.7-2.5 1.7-3.4 2.95-.08.15-.23.22-.39.22m6.25 12.07c-.13 0-.25-.05-.35-.15-.87-.87-1.34-1.43-2.01-2.64-.69-1.23-1.05-2.73-1.05-4.34 0-2.97 2.54-5.39 5.66-5.39s5.66 2.42 5.66 5.39a.5.5 0 0 1-.5.5.5.5 0 0 1-.5-.5c0-2.42-2.09-4.39-4.66-4.39s-4.66 1.97-4.66 4.39c0 1.44.32 2.77.93 3.84.64 1.16 1.08 1.65 1.85 2.43.19.2.19.51 0 .71-.12.1-.24.15-.37.15m7.17-1.85c-1.19 0-2.24-.3-3.1-.89-1.49-1.01-2.38-2.65-2.38-4.39a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5c0 1.41.72 2.74 1.94 3.56.71.48 1.54.71 2.54.71.24 0 .64-.03 1.04-.1.27-.05.54.13.58.41.05.26-.13.53-.41.58-.57.11-1.07.12-1.21.12M14.91 22h-.13c-1.59-.46-2.63-1.05-3.72-2.12a7.28 7.28 0 0 1-2.17-5.22c0-1.62 1.38-2.94 3.08-2.94s3.08 1.32 3.08 2.94c0 1.07.95 1.94 2.08 1.94 1.15 0 2.08-.87 2.08-1.94 0-3.77-3.25-6.83-7.25-6.83-2.84 0-5.46 1.58-6.61 4.03-.39.81-.59 1.76-.59 2.8 0 .78.07 2.01.67 3.61.1.26-.03.55-.29.64a.504.504 0 0 1-.64-.29c-.5-1.31-.73-2.62-.73-3.96 0-1.2.23-2.29.68-3.24 1.33-2.79 4.28-4.6 7.51-4.6 4.54 0 8.25 3.51 8.25 7.83 0 1.62-1.38 2.94-3.08 2.94s-3.08-1.32-3.08-2.94c0-1.07-.93-1.94-2.08-1.94s-2.08.87-2.08 1.94c0 1.71.66 3.31 1.87 4.51.95.94 1.86 1.46 3.27 1.84.27.08.42.36.35.62-.05.23-.26.38-.47.38"/>
+            </svg>
+          </div>
+          <h1 class="scan-title" aria-label="지문을 스캔하세요!">
+            <span class="scan-title__word"><span>지</span><span>문</span><span>을</span></span>
+            <span class="scan-title__gap" aria-hidden="true"></span>
+            <span class="scan-title__word"><span>스</span><span>캔</span><span>하</span><span>세</span><span>요</span><span>!</span></span>
+          </h1>
+          <p class="scan-sub">지문 인식 스마트 소총 보관함</p>
+        </div>
+      </section>
+
+      <!-- 설정 진입: 스캔 (최초등록 or 마스터1 인증) -->
+      <section class="screen" data-screen="scan1" hidden aria-label="지문 스캔">
+        <div class="prompt-block">
+          <p class="prompt-title prompt-title--stack" aria-label="지문을 스캔하세요.">
+            <span class="prompt-line">
+              <span class="scan-title__word"><span>지</span><span>문</span><span>을</span></span>
+            </span>
+            <span class="prompt-line">
+              <span class="scan-title__word"><span>스</span><span>캔</span><span>하</span><span>세</span><span>요</span><span>.</span></span>
+            </span>
+          </p>
+          <p class="prompt-hint">센서에 손가락을 올려주세요</p>
+        </div>
+      </section>
+
+      <!-- 최초 등록 재스캔 -->
+      <section class="screen" data-screen="scan2" hidden aria-label="재스캔">
+        <div class="prompt-block">
+          <p class="prompt-title" aria-label="다시 한 번 스캔하세요.">
+            <span class="scan-title__word"><span>다</span><span>시</span></span>
+            <span class="scan-title__gap scan-title__gap--1" aria-hidden="true"></span>
+            <span class="scan-title__word"><span>한</span></span>
+            <span class="scan-title__gap scan-title__gap--1" aria-hidden="true"></span>
+            <span class="scan-title__word"><span>번</span></span>
+            <span class="scan-title__gap scan-title__gap--1" aria-hidden="true"></span>
+            <span class="scan-title__word"><span>스</span><span>캔</span><span>하</span><span>세</span><span>요</span><span>.</span></span>
+          </p>
+          <p class="prompt-hint">같은 손가락을 다시 올려주세요</p>
+        </div>
+      </section>
+
+      <!-- 최초 등록 저장 확인 -->
+      <section class="screen" data-screen="confirm" hidden aria-label="저장 확인">
+        <div class="prompt-block">
+          <p class="prompt-title" aria-label="지문을 저장하시겠습니까?">
+            <span class="scan-title__word"><span>지</span><span>문</span><span>을</span></span>
+            <span class="scan-title__gap" aria-hidden="true"></span>
+            <span class="scan-title__word"><span>저</span><span>장</span><span>하</span><span>시</span><span>겠</span><span>습</span><span>니</span><span>까</span><span>?</span></span>
+          </p>
+          <div class="btn-row">
+            <button type="button" class="action-btn action-btn--primary" data-action="save">저장</button>
+            <button type="button" class="action-btn" data-action="cancel-confirm">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 최초 등록 완료 -->
+      <section class="screen" data-screen="updated" hidden aria-label="업데이트 완료">
+        <div class="prompt-block">
+          <p class="prompt-title prompt-title--stack" aria-label="지문 정보가 업데이트 되었습니다.">
+            <span class="prompt-line">
+              <span class="scan-title__word"><span>지</span><span>문</span></span>
+              <span class="scan-title__gap scan-title__gap--1" aria-hidden="true"></span>
+              <span class="scan-title__word"><span>정</span><span>보</span><span>가</span></span>
+            </span>
+            <span class="prompt-line">
+              <span class="scan-title__word"><span>업</span><span>데</span><span>이</span><span>트</span></span>
+              <span class="scan-title__gap scan-title__gap--1" aria-hidden="true"></span>
+              <span class="scan-title__word"><span>되</span><span>었</span><span>습</span><span>니</span><span>다</span><span>.</span></span>
+            </span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 미등록 지문 -->
+      <section class="screen" data-screen="denied" hidden aria-label="미등록 지문">
+        <div class="prompt-block">
+          <p class="prompt-title prompt-title--stack" aria-label="등록되지 않은 지문입니다.">
+            <span class="prompt-line">
+              <span class="scan-title__word"><span>등</span><span>록</span><span>되</span><span>지</span></span>
+              <span class="scan-title__gap scan-title__gap--1" aria-hidden="true"></span>
+              <span class="scan-title__word"><span>않</span><span>은</span></span>
+            </span>
+            <span class="prompt-line">
+              <span class="scan-title__word"><span>지</span><span>문</span><span>입</span><span>니</span><span>다</span><span>.</span></span>
+            </span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 접근 권한 없음 -->
+      <section class="screen" data-screen="no-access" hidden aria-label="접근 권한 없음">
+        <div class="prompt-block">
+          <p class="prompt-title" aria-label="접근 권한이 없습니다.">접근 권한이 없습니다.</p>
+        </div>
+      </section>
+
+      <!-- 지문인식기 미연결 -->
+      <section class="screen" data-screen="sensor-missing" hidden aria-label="지문인식기 연결 확인">
+        <div class="prompt-block">
+          <p class="prompt-title prompt-title--stack" aria-label="지문인식기 연결을 확인하세요.">
+            <span class="prompt-line">지문인식기 연결을</span>
+            <span class="prompt-line">확인하세요.</span>
+          </p>
+          <p class="prompt-hint">USB 케이블과 전원 연결 상태를 확인해 주세요</p>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="board-missing" hidden aria-label="보관함 보드 연결 확인">
+        <div class="prompt-block">
+          <p class="prompt-title prompt-title--stack" aria-label="보드 연결을 확인하세요.">
+            <span class="prompt-line">보드 연결을</span>
+            <span class="prompt-line">확인하세요.</span>
+          </p>
+          <p class="prompt-hint">USB 케이블과 전원 연결 상태를 확인해 주세요</p>
+        </div>
+      </section>
+
+      <!-- 대기 스캔 후: 불출/보관 -->
+      <section class="screen" data-screen="ops-menu" hidden aria-label="불출 보관">
+        <div class="prompt-block prompt-block--wide">
+          <p class="prompt-title prompt-title--md" aria-label="다음 단계를 선택하세요.">다음 단계를 선택하세요.</p>
+          <div class="menu-row menu-row--pair">
+            <button type="button" class="menu-btn" data-action="ops-issue">불출</button>
+            <button type="button" class="menu-btn" data-action="ops-store">보관</button>
+          </div>
+          <div class="btn-row btn-row--single">
+            <button type="button" class="menu-btn menu-btn--muted menu-btn--narrow" data-action="ops-cancel">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 불출 목적 -->
+      <section class="screen" data-screen="purpose-menu" hidden aria-label="불출 목적">
+        <div class="prompt-block prompt-block--wide">
+          <p class="prompt-title prompt-title--md" aria-label="다음 단계를 선택하세요.">다음 단계를 선택하세요.</p>
+          <div class="purpose-grid">
+            <button type="button" class="menu-btn" data-action="pick-purpose" data-purpose="사격">사격</button>
+            <button type="button" class="menu-btn" data-action="pick-purpose" data-purpose="훈련">훈련</button>
+            <button type="button" class="menu-btn" data-action="pick-purpose" data-purpose="정비">정비</button>
+            <button type="button" class="menu-btn" data-action="pick-purpose" data-purpose="근무">근무</button>
+            <button type="button" class="menu-btn" data-action="pick-purpose" data-purpose="기타">기타</button>
+            <button type="button" class="menu-btn" data-action="pick-purpose" data-purpose="젤루텍">젤루텍</button>
+          </div>
+          <div class="btn-row btn-row--single">
+            <button type="button" class="menu-btn menu-btn--muted menu-btn--narrow" data-action="purpose-cancel">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 문 열림 알림 -->
+      <section class="screen" data-screen="door-opened" hidden aria-label="보관함 문 열림">
+        <div class="prompt-block">
+          <p class="prompt-title prompt-title--stack" id="doorOpenedTitle" aria-label="보관함 문이 열렸습니다.">
+            <span class="prompt-line" id="doorOpenedLine">사용자1의 보관함문이 열렸습니다.</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 불출/보관 완료 -->
+      <section class="screen" data-screen="ops-done" hidden aria-label="불출 보관 완료">
+        <div class="prompt-block">
+          <p class="prompt-title prompt-title--stack" id="opsDoneTitle">
+            <span class="prompt-line" id="opsDoneLine1">소총을 불출하였습니다.</span>
+            <span class="prompt-line" id="opsDoneLine2">문을 닫아주세요!</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 역할 선택 -->
+      <section class="screen" data-screen="role-menu" hidden aria-label="역할 선택">
+        <div class="prompt-block prompt-block--wide">
+          <p class="prompt-title prompt-title--md" aria-label="다음 단계를 선택하세요.">다음 단계를 선택하세요.</p>
+          <div class="menu-row">
+            <button type="button" class="menu-btn" data-action="role-master">마스터 관리자</button>
+            <button type="button" class="menu-btn" data-action="role-sub">서브 관리자</button>
+            <button type="button" class="menu-btn" data-action="role-user">사용자</button>
+          </div>
+          <div class="btn-row btn-row--single">
+            <button type="button" class="menu-btn menu-btn--muted menu-btn--narrow" data-action="cancel-menu">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 마스터 슬롯 선택 -->
+      <section class="screen" data-screen="master-menu" hidden aria-label="마스터 선택">
+        <div class="prompt-block prompt-block--wide admin-fit">
+          <p class="prompt-title prompt-title--md" aria-label="다음 단계를 선택하세요.">다음 단계를 선택하세요.</p>
+          <div class="menu-stack menu-stack--masters">
+            <button type="button" class="menu-btn menu-btn--compact" data-action="pick-master" data-slot="1">마스터 1 관리자</button>
+            <button type="button" class="menu-btn menu-btn--compact" data-action="pick-master" data-slot="2">마스터 2 관리자</button>
+            <button type="button" class="menu-btn menu-btn--compact" data-action="pick-master" data-slot="3">마스터 3 관리자</button>
+            <button type="button" class="menu-btn menu-btn--compact" data-action="pick-master" data-slot="4">마스터 4 관리자</button>
+            <button type="button" class="menu-btn menu-btn--compact" data-action="pick-master" data-slot="5">마스터 5 관리자</button>
+          </div>
+          <div class="btn-row btn-row--single admin-fit__footer">
+            <button type="button" class="action-btn action-btn--cancel" data-action="back-role">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 등록/삭제 (마스터) -->
+      <section class="screen" data-screen="action-menu" hidden aria-label="등록 삭제">
+        <div class="prompt-block prompt-block--wide">
+          <p class="prompt-title prompt-title--md" aria-label="다음 단계를 선택하세요.">다음 단계를 선택하세요.</p>
+          <p class="prompt-hint" id="actionSlotHint"></p>
+          <div class="menu-stack">
+            <button type="button" class="menu-btn" data-action="do-enroll">등록</button>
+            <button type="button" class="menu-btn" data-action="do-delete">삭제</button>
+            <button type="button" class="menu-btn menu-btn--muted" data-action="back-master">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 서브: 등록/삭제 -->
+      <section class="screen" data-screen="sub-action-menu" hidden aria-label="서브 등록 삭제">
+        <div class="prompt-block prompt-block--wide">
+          <p class="prompt-title prompt-title--md" aria-label="다음 단계를 선택하세요.">다음 단계를 선택하세요.</p>
+          <div class="menu-stack">
+            <button type="button" class="menu-btn" data-action="sub-enroll">등록</button>
+            <button type="button" class="menu-btn" data-action="sub-delete">삭제</button>
+            <button type="button" class="menu-btn menu-btn--muted" data-action="back-role">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 서브: S1~S30 -->
+      <section class="screen" data-screen="sub-slot-menu" hidden aria-label="서브 슬롯 선택">
+        <div class="prompt-block prompt-block--wide admin-fit">
+          <p class="prompt-title prompt-title--md" aria-label="다음 단계를 선택하세요.">다음 단계를 선택하세요.</p>
+          <div class="slot-grid" id="subSlotGrid"></div>
+          <div class="btn-row btn-row--single admin-fit__footer sub-slot-nav">
+            <button type="button" class="action-btn" data-action="sub-page-prev" id="subPagePrev">이전</button>
+            <button type="button" class="action-btn" data-action="sub-page-next" id="subPageNext">다음</button>
+            <button type="button" class="action-btn action-btn--cancel" data-action="back-sub-action">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 사용자: 등록/삭제 -->
+      <section class="screen" data-screen="user-action-menu" hidden aria-label="사용자 등록 삭제">
+        <div class="prompt-block prompt-block--wide">
+          <p class="prompt-title prompt-title--md" aria-label="다음 단계를 선택하세요.">다음 단계를 선택하세요.</p>
+          <div class="menu-stack">
+            <button type="button" class="menu-btn" data-action="user-enroll">등록</button>
+            <button type="button" class="menu-btn" data-action="user-delete">삭제</button>
+            <button type="button" class="menu-btn menu-btn--muted" data-action="back-role">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 사용자: 사용자1~10 -->
+      <section class="screen" data-screen="user-slot-menu" hidden aria-label="사용자 슬롯 선택">
+        <div class="prompt-block prompt-block--wide admin-fit">
+          <p class="prompt-title prompt-title--md" aria-label="다음 단계를 선택하세요.">다음 단계를 선택하세요.</p>
+          <div class="user-slot-grid" id="userSlotGrid"></div>
+          <div class="btn-row btn-row--single admin-fit__footer">
+            <button type="button" class="action-btn action-btn--cancel" data-action="back-user-action">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 삭제 확인 -->
+      <section class="screen" data-screen="delete-confirm" hidden aria-label="삭제 확인">
+        <div class="prompt-block">
+          <p class="prompt-title" aria-label="지문을 삭제하시겠습니까?">지문을 삭제하시겠습니까?</p>
+          <div class="btn-row">
+            <button type="button" class="action-btn action-btn--primary" data-action="delete-yes">YES</button>
+            <button type="button" class="action-btn" data-action="delete-no">NO</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 삭제 완료 -->
+      <section class="screen" data-screen="deleted" hidden aria-label="삭제 완료">
+        <div class="prompt-block">
+          <p class="prompt-title prompt-title--stack" aria-label="지문 정보가 삭제 되었습니다.">
+            <span class="prompt-line">지문 정보가</span>
+            <span class="prompt-line">삭제 되었습니다.</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 엔지니어: 비밀번호 -->
+      <section class="screen" data-screen="engineer-password" hidden aria-label="엔지니어 비밀번호">
+        <div class="prompt-block prompt-block--wide engineer-pass-block">
+          <p class="prompt-title prompt-title--md">엔지니어 모드</p>
+          <p class="prompt-hint">비밀번호를 입력하세요</p>
+          <input type="password" class="kb-input engineer-pass-input" id="engineerPassword" maxlength="20" inputmode="none" autocomplete="off" readonly />
+          <div class="engineer-numpad" id="engineerNumpad" aria-label="숫자 자판">
+            <div class="kb-row">
+              <button type="button" class="kb-key" data-action="eng-digit" data-digit="1">1</button>
+              <button type="button" class="kb-key" data-action="eng-digit" data-digit="2">2</button>
+              <button type="button" class="kb-key" data-action="eng-digit" data-digit="3">3</button>
+            </div>
+            <div class="kb-row">
+              <button type="button" class="kb-key" data-action="eng-digit" data-digit="4">4</button>
+              <button type="button" class="kb-key" data-action="eng-digit" data-digit="5">5</button>
+              <button type="button" class="kb-key" data-action="eng-digit" data-digit="6">6</button>
+            </div>
+            <div class="kb-row">
+              <button type="button" class="kb-key" data-action="eng-digit" data-digit="7">7</button>
+              <button type="button" class="kb-key" data-action="eng-digit" data-digit="8">8</button>
+              <button type="button" class="kb-key" data-action="eng-digit" data-digit="9">9</button>
+            </div>
+            <div class="kb-row">
+              <button type="button" class="kb-key kb-key--wide" data-action="eng-back">지우기</button>
+              <button type="button" class="kb-key" data-action="eng-digit" data-digit="0">0</button>
+              <button type="button" class="kb-key kb-key--wide" data-action="eng-clear">전체삭제</button>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="action-btn action-btn--primary" data-action="engineer-login">확인</button>
+            <button type="button" class="action-btn" data-action="engineer-cancel">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 엔지니어 메뉴 -->
+      <section class="screen" data-screen="engineer-menu" hidden aria-label="엔지니어 메뉴">
+        <div class="prompt-block prompt-block--wide">
+          <p class="prompt-title prompt-title--md">엔지니어 모드</p>
+          <div class="menu-stack menu-stack--engineer">
+            <button type="button" class="menu-btn menu-btn--engineer" data-action="engineer-kind-rifle">소총보관함</button>
+            <button type="button" class="menu-btn menu-btn--engineer" data-action="engineer-kind-pistol">권총보관함</button>
+            <button type="button" class="menu-btn menu-btn--engineer" data-action="engineer-reset">보관함 초기화</button>
+            <button type="button" class="menu-btn menu-btn--engineer menu-btn--muted" data-action="engineer-close">닫기</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 엔지니어 완료 -->
+      <section class="screen" data-screen="engineer-done" hidden aria-label="엔지니어 완료">
+        <div class="prompt-block">
+          <p class="prompt-title prompt-title--stack" id="engineerDoneTitle" aria-label="완료되었습니다.">
+            <span class="prompt-line">완료되었습니다.</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 소총 보관함 현황 -->
+      <section class="screen" data-screen="locker-status" hidden aria-label="소총보관함 보관현황">
+        <div class="locker-panel">
+          <p class="prompt-title prompt-title--md" id="lockerStatusTitle">소총보관함 보관현황</p>
+
+          <div class="status-dash" aria-label="보관 요약">
+            <div class="status-dash__side status-dash__side--left">
+              <div class="status-dash__row">
+                <span class="status-pill">등록</span>
+                <span class="status-pill-num" id="statReg">0</span>
+              </div>
+            </div>
+
+            <div class="status-hero-pair">
+              <div class="status-hero">
+                <div class="status-hero__label">보관 수량</div>
+                <div class="status-hero__value" id="statStored">0</div>
+              </div>
+              <div class="status-hero status-hero--out">
+                <div class="status-hero__label">불출 수량</div>
+                <div class="status-hero__value" id="statIssued">0</div>
+              </div>
+            </div>
+
+            <div class="status-dash__side status-dash__side--right">
+              <div class="status-dash__row">
+                <span class="status-pill-num" id="statUnissued">0</span>
+                <span class="status-pill">미지급</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="issue-card" aria-label="불출 목적별 현황">
+            <div class="issue-card__head">
+              <span>사격</span>
+              <span>훈련</span>
+              <span>정비</span>
+              <span>근무</span>
+              <span>기타</span>
+              <span>합계</span>
+            </div>
+            <div class="issue-card__body">
+              <span id="statShoot">0</span>
+              <span id="statTrain">0</span>
+              <span id="statMaint">0</span>
+              <span id="statDuty">0</span>
+              <span id="statOther">0</span>
+              <span id="statSum">0</span>
+            </div>
+          </div>
+
+          <div class="locker-board-card" aria-label="보관함 슬롯 1~10">
+            <table class="locker-board" id="lockerBox">
+              <tbody>
+                <tr class="locker-board__names" id="lockerNameRow"></tr>
+                <tr class="locker-board__rifles" id="lockerRifleRow"></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="btn-row btn-row--single">
+            <button type="button" class="action-btn" data-action="close-locker">닫기</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bottom-bar" id="footerBar">
+      <button type="button" class="icon-btn rifle-btn" id="rifleBtn" aria-label="보관함 현황" hidden>
+        <img src="/static/img/rifle.png" alt="" class="rifle-btn__img" id="rifleBtnImg" />
+      </button>
+      <div class="approver-badge" id="approverBadge" hidden aria-live="polite">
+        <span id="approverBadgeText">마스터1관리자 접근 허용중</span>
+      </div>
+      <div class="footer-spacer"></div>
+      <button type="button" class="icon-btn settings-btn" id="settingsBtn" aria-label="설정">
+        <svg viewBox="0 0 24 24" width="42" height="42" aria-hidden="true">
+          <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.1 7.1 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.08a.5.5 0 0 0 .12.64L4.86 10.3c-.04.31-.06.63-.06.94s.02.63.06.94L2.83 14.76a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.4.31.6.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.22.09.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"/>
+        </svg>
+      </button>
+    </footer>
+
+    <!-- 이름 변경 + 화상 키보드 -->
+    <div class="kb-overlay" id="kbOverlay" hidden>
+      <div class="kb-panel" role="dialog" aria-label="이름 변경">
+        <p class="kb-title">이름 변경</p>
+        <input type="text" class="kb-input" id="kbInput" maxlength="24" inputmode="text" autocomplete="off" />
+        <div class="kb-keys" id="kbKeys"></div>
+        <div class="kb-actions">
+          <button type="button" class="action-btn" data-kb="lang">한/영</button>
+          <button type="button" class="action-btn" data-kb="space">띄어쓰기</button>
+          <button type="button" class="action-btn" data-kb="back">지우기</button>
+          <button type="button" class="action-btn action-btn--primary" data-kb="done">완료</button>
+          <button type="button" class="action-btn" data-kb="cancel">취소</button>
+        </div>
+      </div>
+    </div>
+    <div class="scan-countdown" id="scanCountdown" hidden></div>
+  </div>
+  <script src="/static/js/hangul-keyboard.js?v=13"></script>
+  <script src="/static/js/wait.js?v=40"></script>
+</body>
+</html>

@@ -123,6 +123,10 @@ class Handler(BaseHTTPRequestHandler):
             result = STORE.select_locker(body)
             self._json(result, 200 if result.get("ok") else 400)
             return
+        if parsed.path == "/api/unit":
+            result = STORE.save_unit_name(str(body.get("name") or ""), actor)
+            self._json(result, 200 if result.get("ok") else 400)
+            return
         if parsed.path == "/api/purpose":
             result = STORE.save_purpose_label(str(body.get("label") or ""), actor)
             self._json(result, 200 if result.get("ok") else 400)
@@ -193,7 +197,10 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-cache")
+        if target.suffix.lower() in {".png", ".jpg", ".jpeg", ".ico"}:
+            self.send_header("Cache-Control", "public, max-age=86400")
+        else:
+            self.send_header("Cache-Control", "no-cache")
         self.end_headers()
         self.wfile.write(data)
 

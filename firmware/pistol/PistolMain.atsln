@@ -1,0 +1,21 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Atmel Studio Solution File, Format Version 11.00
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{82D3B6EB-B038-4453-BA8D-55DD043866CB}") = "PistolMain", "PistolMain.cproj", "{A8F4E2C1-9B3D-4E5F-A6B7-C8D9E0F1A2B3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A8F4E2C1-9B3D-4E5F-A6B7-C8D9E0F1A2B3}.Debug|AVR.ActiveCfg = Debug|AVR
+		{A8F4E2C1-9B3D-4E5F-A6B7-C8D9E0F1A2B3}.Debug|AVR.Build.0 = Debug|AVR
+		{A8F4E2C1-9B3D-4E5F-A6B7-C8D9E0F1A2B3}.Release|AVR.ActiveCfg = Release|AVR
+		{A8F4E2C1-9B3D-4E5F-A6B7-C8D9E0F1A2B3}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

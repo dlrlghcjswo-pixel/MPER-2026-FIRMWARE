@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=zellootec
+Description=ZELLOOTEC boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/zellootec
+ScriptFile=/usr/share/plymouth/themes/zellootec/zellootec.script
